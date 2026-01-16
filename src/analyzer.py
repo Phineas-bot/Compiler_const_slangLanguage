@@ -1,86 +1,63 @@
-
 from __future__ import annotations
-
 import re
 import argparse
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
 
-
 Token = Tuple[str, str]
-
 
 @dataclass
 class Grammar:
     start: str
     productions: Dict[str, List[List[str]]]
 
-
 class Lexer:
-    """
-    Refined Lexer with ADJ category and corrected VERB/AUX classifications.
-    """
-    
     def __init__(self) -> None:
         self.lexicon = {
             "CONJ": {
                 "but", "and", "mais", "et", "or", "ou", "while", "because", "quoique"
             },
-            
             "DET": {
                 "the", "your", "my", "this", "that", "our", "a", "an",
                 "un", "une", "ce", "cette", "le", "la", "les", "des", 
                 "mon", "ma", "mes", "l", "au", "aux", "du", "de",
                 "d", "ton", "ta", "tes", "son", "sa", "ses", "some", "any"
             },
-            
             "PRON": {
                 "i", "you", "we", "me", "he", "she", "they", "us", "your",
                 "je", "tu", "il", "elle", "on", "nous",
                 "c'est", "dem", "c", "j", "him", "her", "it", "them", "who", "what", "qui"
             },
-            
             "NEG": {
                 "no", "not", "non", "ne", "n", "never", "dont"
             },
-            
             "AUX": {
-                # Auxiliary verbs that strictly support another verb (Don, Fit, Go)
                 "don", "fit", "go", 
-                # French Auxiliaries
                 "va", "vais", "ont", "est", "suis", "sont", "ai", "as", "av", "a",
                 "wan", "bin"
             },
-            
             "VERB": {
-                # Full verbs including those that act as Copula/Existential
                 "drop", "carry", "go", "pass", "come", "waka", "rush", "fall",
                 "slip", "ferme", "take", "dodge", "send", "make", "get", "try", 
-                "cut", "charge", "reduce", "give", "start", "turn", "remain", 
-                "increase", "add", "keep", "finish", "beat", "spoil", "show", 
+                "cut", "charge", "reduce", "give", "start", "turn", "remain",
+                "increase", "add", "keep", "finish", "beat", "spoil", "show",
                 "wait", "open", "print", "copy", "kill", "work", "say", "talk", 
-                "happen", "crack", "change", "clash", "wire", "die", "chop", 
+                "happen", "crack", "change", "clash", "wire", "die", "chop",
                 "manage", "control", "wanda", "wonder", "check", "look", "tell", 
                 "call", "need", "want", "like", "stay", "run", "enter", "leave", 
                 "reach", "wash", "buy", "sell", "increase", "print",
-                
-                # Copula/Existential Pidgin Verbs (Moved from AUX to VERB to fix "Traffic dey")
                 "dey", "be", "na",
-                
-                # Mixed Verbs
-                "fit", # Can be aux or main verb "It fit"
-                "suis", "est", "sont", "ont", "ai", "as", "av", "a", # French copulas
-                "enerve", "confuse" # Used as verbs "Je suis enerve" (I am annoyed) or "Je m'enerve"
+                "fit",
+                "suis", "est", "sont", "ont", "ai", "as", "av", "a",
+                "enerve", "confuse"
             },
-            
             "PREP": {
                 "for", "to", "since", "like", "at", "after", "in", "on",
                 "with", "from", "de", "a", "dans", "sur", "avec", "devant", 
                 "depuis", "pour", "chez", "au", "aux", "du", "d", "by", "about",
                 "inside", "outside", "behind", "front", "near", "sans"
             },
-            
             "ADJ": {
                 "small", "big", "long", "short", "fast", "quick", "slow",
                 "good", "bad", "hot", "cold", "sweet", "bitter", "better",
@@ -88,9 +65,8 @@ class Lexer:
                 "fine", "okay", "serious", "wrong", "right", "hard", "soft",
                 "black", "white", "red", "young", "old", "new", "last",
                 "franglais", "pidgin", "french", "english", "pale", "tired",
-                "enerve", "confuse" # Can be adjectives
+                "enerve", "confuse"
             },
-
             "ADVWORD": {
                 "small-small", "nayo-nayo", "fast-fast", "well-well",
                 "vite", "tot", "today", "yesterday", "tomorrow", "morning", 
@@ -98,19 +74,13 @@ class Lexer:
                 "combien", "wetin", "quand", "comment", "hmmm", "garrr", "ekiee", 
                 "ah", "wah", "hein", "o", "nor", "la", "là", "comme", "now", "here", "there"
             },
-            
             "NOUN": {
-                # People
                 "chef", "moto-guy", "mami", "pikin", "bro", "man", "aunty",
                 "boss", "boy", "prof", "lecturer", "student", "babana",
                 "boh", "students", "fools", "police", "thieves", "security",
-                
-                # Places
                 "nlongkak", "carrefour", "quartier", "yaounde", "station",
                 "hostel", "campus", "melen", "bastos", "universite", "ngola", 
                 "checkpoint", "gate", "classe", "class", "cyber", "place",
-                
-                # Objects/Abstract
                 "data", "network", "assignment", "connexion", "zero-zero",
                 "eneo", "light", "phone", "current", "frigo", "price",
                 "traffic", "rain", "road", "problem", "river", "mud",
@@ -128,7 +98,6 @@ class Lexer:
         }
 
     def tokenize(self, sentence: str) -> List[Token]:
-        # Replace punctuation with spaces
         cleaned = (
             sentence.lower()
             .replace("'", "'")
@@ -138,14 +107,11 @@ class Lexer:
             .replace(";", " ").replace(".", " ").replace(":", " ")
             .replace("+", " ")
         )
-
         words = re.findall(r"[a-z]+(?:-[a-z]+)*(?:'[a-z]+)?|\d+[a-z]*", cleaned)
         tokens: List[Token] = []
-
         for word in words:
             token_type = self._classify(word)
             tokens.append((token_type, word))
-
         tokens = self._collapse_conjunctions(tokens)
         tokens.append(("$", "$"))
         return tokens
@@ -170,7 +136,6 @@ class Lexer:
         if collapsed and collapsed[-1][0] == "CONJ":
             collapsed = collapsed[:-1]
         return collapsed
-
 
 class LL1Parser:
     def __init__(self, grammar: Grammar) -> None:
@@ -282,7 +247,6 @@ class LL1Parser:
         result.add("ε")
         return result
 
-
 def build_grammar(mode: str = "pidgin") -> Grammar:
     base_productions = {
         "ADV": [["ADVWORD", "ADV_TAIL"]],
@@ -293,19 +257,16 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
     if mode == "pidgin":
         pidgin_productions = {
             "S": [["CLAUSE", "S_TAIL"]],
-            # KEY FIX: Allow CLAUSES to follow CLAUSES without CONJ (Run-on sentences)
             "S_TAIL": [
                 ["CONJ", "CLAUSE", "S_TAIL"], 
                 ["CLAUSE", "S_TAIL"],  
                 ["ε"]
             ],
-            
             "CLAUSE": [
                 ["VOCATIVE", "CLAUSE"],
                 ["CORE"]
             ],
             "VOCATIVE": [["NOUN"], ["DET", "NOUN"]], 
-            
             "CORE": [
                 ["VP"],                 
                 ["NP", "CORE_TAIL"],   
@@ -318,7 +279,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
                 ["PP", "CORE_TAIL"],
                 ["ε"]
             ],
-            
             "NP": [
                 ["DET", "NP_HEAD"], 
                 ["NEG", "NP_HEAD"],
@@ -336,12 +296,11 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
                 ["PP", "NP_TAIL"],
                 ["ε"]
             ],
-            
             "VP": [
                 ["NEG", "AUX", "VP_TAIL"],
                 ["NEG", "VERB", "VP_TAIL"],
                 ["AUX", "VERB", "VP_TAIL"],
-                ["VERB", "VP_TAIL"]          # "Dey" as main verb
+                ["VERB", "VP_TAIL"]
             ],
             "VP_TAIL": [
                 ["VERB", "VP_TAIL"],
@@ -361,7 +320,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
                 ["CLAUSE", "S_TAIL"], 
                 ["ε"]
             ],
-            
             "CLAUSE": [
                 ["VOCATIVE", "CLAUSE"],
                 ["INTJ", "CORE"],
@@ -369,7 +327,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
             ],
             "INTJ": [["ADVWORD"]],
             "VOCATIVE": [["NOUN"], ["DET", "NOUN"]],
-            
             "CORE": [
                 ["VP"],
                 ["NP", "CORE_TAIL"],
@@ -382,7 +339,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
                 ["PP", "CORE_TAIL"],
                 ["ε"]
             ],
-            
             "NP": [
                 ["DET", "NP_HEAD"],
                 ["NEG", "NP_HEAD"],
@@ -400,7 +356,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
                 ["PP", "NP_TAIL"],
                 ["ε"]
             ],
-            
             "VP": [
                 ["NEG", "AUX", "VP_TAIL"],
                 ["NEG", "VERB", "VP_TAIL"],
@@ -422,7 +377,6 @@ def build_grammar(mode: str = "pidgin") -> Grammar:
         raise ValueError(f"Unknown mode: {mode}")
     
     return Grammar(start="S", productions=productions)
-
 
 def analyze_sentences(sentences: List[str], mode: str, debug: bool = False) -> None:
     lexer = Lexer()
@@ -450,7 +404,6 @@ def analyze_sentences(sentences: List[str], mode: str, debug: bool = False) -> N
     print(f"Summary: {accept_count} ACCEPTED, {reject_count} REJECTED")
     print(f"{'='*70}")
 
-
 def write_token_frequencies(sentences: List[str], output_suffix: str = "") -> None:
     lexer = Lexer()
     type_counts: Dict[str, int] = {}
@@ -476,7 +429,6 @@ def write_token_frequencies(sentences: List[str], output_suffix: str = "") -> No
             handle.write(f"{k}: {v}\n")
     
     print(f"✓ Token frequencies written to: {filename}")
-
 
 def write_ll1_artifacts(parser: LL1Parser, output_suffix: str = "") -> None:
     filename = f"ll1_artifacts{output_suffix}.txt"
@@ -507,7 +459,6 @@ def write_ll1_artifacts(parser: LL1Parser, output_suffix: str = "") -> None:
                 handle.write(f"M[{nt}, {term}] = {' '.join(rule)}\n")
     
     print(f"✓ LL(1) artifacts written to: {filename}")
-
 
 def process_mode(mode: str, data_dir: Path, debug: bool = False) -> None:
     try:
@@ -543,7 +494,6 @@ def process_mode(mode: str, data_dir: Path, debug: bool = False) -> None:
     except Exception as e:
         print(f"Error: {e}")
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Urban Slang Analyzer")
     parser.add_argument("--mode", choices=["pidgin", "franglais", "both"], default="pidgin")
@@ -554,7 +504,5 @@ def main() -> None:
     data_dir = script_dir.parent / "data"
     process_mode(args.mode, data_dir, args.debug)
 
-
 if __name__ == "__main__":
     main()
-
