@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+*.egg-info/
+*.egg
+.env/
+.venv/
+.venv.bak/
+ENV/
+.ENV/
+.Python
+pip-wheel-metadata/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Logs
+*.log
+
+# Build / dist
+build/
+dist/
+
+# Node / React
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Optional local config
+.env.local
+.env.*.local
+
+# FastAPI / Uvicorn
+*.pid
+
+# Cache
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Artifacts
+/data/token_frequencies.txt
+/data/ll1_artifacts.txt

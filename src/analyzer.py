@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 Token = Tuple[str, str]  # (type, lexeme)
@@ -426,6 +426,9 @@ class LL1Parser:
         self.table = self._build_parse_table()
 
     def parse(self, tokens: List[Token]) -> bool:
+        return self.parse_with_diagnostics(tokens)["ok"]
+
+    def parse_with_diagnostics(self, tokens: List[Token]) -> Dict[str, Any]:
         stack: List[str] = ["$", self.grammar.start]
         index = 0
 
@@ -434,23 +437,55 @@ class LL1Parser:
             current_type = tokens[index][0]
 
             if top == "$":
-                return current_type == "$"
+                ok = current_type == "$"
+                if ok:
+                    return {"ok": True, "diagnostic": None}
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": ["$"],
+                    },
+                }
 
             if self._is_terminal(top):
                 if top == current_type:
                     index += 1
                     continue
-                return False
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": [top],
+                    },
+                }
 
             production = self.table.get((top, current_type))
             if production is None:
-                return False
+                expected = sorted({t for (nt, t) in self.table if nt == top})
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": expected,
+                    },
+                }
 
             for symbol in reversed(production):
                 if symbol != "ε":
                     stack.append(symbol)
 
-        return False
+        return {
+            "ok": False,
+            "diagnostic": {
+                "position": index,
+                "actual": tokens[index][0] if index < len(tokens) else "EOF",
+                "expected": ["$"],
+            },
+        }
 
     def _is_terminal(self, symbol: str) -> bool:
         return symbol not in self.grammar.productions
@@ -594,6 +629,16 @@ def analyze_sentences(sentences: List[str]) -> None:
         print(f"{verdict}: {sentence.strip()}")
 
 
+def parse_sentence(sentence: str, *, explain: bool = False) -> Dict[str, Any]:
+    lexer = Lexer()
+    parser = LL1Parser(build_grammar())
+    tokens = lexer.tokenize(sentence)
+    result = parser.parse_with_diagnostics(tokens)
+    if not explain:
+        result = {"ok": result["ok"], "diagnostic": None}
+    return result
+
+
 def write_token_frequencies(sentences: List[str]) -> None:
     lexer = Lexer()
     type_counts: Dict[str, int] = {}
@@ -650,20 +695,17 @@ def main() -> None:
     write_ll1_artifacts(LL1Parser(build_grammar()))
 
     if sys.stdin.isatty():
-        lexer = Lexer()
-        parser = LL1Parser(build_grammar())
         print("\nInteractive mode: type a sentence and press Enter (blank or 'exit' to quit).")
-        while True:
-            try:
+        try:
+            while True:
                 line = input("> ").strip()
-            except EOFError:
-                break
-            if not line or line.lower() in {"exit", "quit"}:
-                break
-            tokens = lexer.tokenize(line)
-            ok = parser.parse(tokens)
-            verdict = "ACCEPT" if ok else "REJECT"
-            print(f"{verdict}: {line}")
+                if not line or line.lower() in {"exit", "quit"}:
+                    break
+                result = parse_sentence(line)
+                verdict = "ACCEPT" if result["ok"] else "REJECT"
+                print(f"{verdict}: {line}")
+        except (EOFError, KeyboardInterrupt):
+            print("\nbye")
 
 
 if __name__ == "__main__":
