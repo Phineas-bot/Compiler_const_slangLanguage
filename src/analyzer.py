@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Dict, List, Set, Tuple
@@ -647,6 +648,22 @@ def main() -> None:
     analyze_sentences(sentences)
     write_token_frequencies(sentences)
     write_ll1_artifacts(LL1Parser(build_grammar()))
+
+    if sys.stdin.isatty():
+        lexer = Lexer()
+        parser = LL1Parser(build_grammar())
+        print("\nInteractive mode: type a sentence and press Enter (blank or 'exit' to quit).")
+        while True:
+            try:
+                line = input("> ").strip()
+            except EOFError:
+                break
+            if not line or line.lower() in {"exit", "quit"}:
+                break
+            tokens = lexer.tokenize(line)
+            ok = parser.parse(tokens)
+            verdict = "ACCEPT" if ok else "REJECT"
+            print(f"{verdict}: {line}")
 
 
 if __name__ == "__main__":
