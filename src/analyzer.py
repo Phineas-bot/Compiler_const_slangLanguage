@@ -18,12 +18,73 @@ class Grammar:
 class Lexer:
     def __init__(self) -> None:
         self.lexicon = {
-            "CONJ": {"but", "and", "mais"},
-            "DET": {"the", "your", "my", "this", "that", "un", "une", "ce", "cette"},
-            "PRON": {"i", "you", "we", "me", "he", "she", "they", "your", "je", "c'est"},
-            "NEG": {"no", "not"},
-            "AUX": {"don"},
+            "CONJ": {
+                "and",
+                "but",
+                "or",
+                "so",
+                "mais",
+                "et",
+                "donc",
+                "alors",
+                "puis",
+                "parce",
+            },
+            "DET": {
+                "the",
+                "a",
+                "an",
+                "your",
+                "my",
+                "this",
+                "that",
+                "un",
+                "une",
+                "le",
+                "la",
+                "les",
+                "des",
+                "du",
+                "ce",
+                "cette",
+                "ces",
+                "mon",
+                "ma",
+                "mes",
+                "ton",
+                "ta",
+                "tes",
+                "notre",
+                "votre",
+            },
+            "PRON": {
+                "i",
+                "you",
+                "we",
+                "me",
+                "he",
+                "she",
+                "they",
+                "je",
+                "tu",
+                "il",
+                "elle",
+                "on",
+                "nous",
+                "vous",
+                "moi",
+                "toi",
+                "lui",
+                "leur",
+                "ça",
+                "c'est",
+                "j'ai",
+                "j'suis",
+            },
+            "NEG": {"no", "not", "pas", "jamais", "plus"},
+            "AUX": {"don", "ai", "as", "a", "avons", "avez", "ont", "est", "suis"},
             "VERB": {
+                # English / Pidgin
                 "drop",
                 "send",
                 "dey",
@@ -51,12 +112,65 @@ class Lexer:
                 "finish",
                 "beat",
                 "spoil",
-                "suis",
-                "fais",
-                "est",
                 "na",
+                "sabi",
+                "want",
+                "need",
+                "wait",
+                "hurry",
+                "pay",
+                # French (common in franc-anglais)
+                "suis",
+                "est",
+                "faire",
+                "fais",
+                "donner",
+                "donne",
+                "envoyer",
+                "envoie",
+                "aller",
+                "vais",
+                "venir",
+                "viens",
+                "peux",
+                "peut",
+                "faut",
+                "chercher",
+                "cherche",
+                "regarder",
+                "regarde",
+                "aider",
+                "aide",
+                "descendre",
+                "descends",
+                "monter",
+                "monte",
+                "pose",
             },
-            "PREP": {"for", "to", "since", "like"},
+            "PREP": {
+                "for",
+                "to",
+                "since",
+                "like",
+                "in",
+                "on",
+                "at",
+                "from",
+                "dans",
+                "sur",
+                "chez",
+                "avec",
+                "sans",
+                "pour",
+                "depuis",
+                "vers",
+                "à",
+                "au",
+                "aux",
+                "de",
+                "du",
+                "des",
+            },
             "ADVWORD": {
                 "small",
                 "quick",
@@ -76,12 +190,35 @@ class Lexer:
                 "wanda",
                 "wah",
                 "non",
+                "hein",
+                "eh",
+                "abeg",
+                "oya",
+                "svp",
+                "stp",
+                "vite",
+                "maintenant",
+                "déjà",
+                "encore",
+                "seulement",
+                "trop",
+                "urgent",
+                "calm",
+                # Local greetings/expressions
+                "mbolo",
+                "jaaraama",
+                "jam",
+                "tan",
             },
             "NOUN": {
                 "chef",
+                "chauffeur",
                 "moto-guy",
+                "bendskin",
                 "nlongkak",
                 "carrefour",
+                "ngousso",
+                "melen",
                 "data",
                 "network",
                 "assignment",
@@ -105,6 +242,7 @@ class Lexer:
                 "front",
                 "rain",
                 "road",
+                "route",
                 "problem",
                 "river",
                 "hostel",
@@ -113,6 +251,7 @@ class Lexer:
                 "water",
                 "yaounde",
                 "fuel",
+                "essence",
                 "queue",
                 "station",
                 "taxi",
@@ -133,6 +272,54 @@ class Lexer:
                 "time",
                 "effort",
                 "enerve",
+                "ictu",
+                "moodle",
+                "devoir",
+                "monnaie",
+                "change",
+                "prière",
+                "couvre-feu",
+            },
+            "GREET": {
+                "mbolo",
+                "molo",
+                "jaaraama",
+                "jam",
+                "tan",
+            },
+            "REQ_WORD": {
+                "please",
+                "svp",
+                "stp",
+                "s'il",
+                "sil",
+            },
+            "FUL_WORD": {
+                "mi",
+                "miɗo",
+                "yidi",
+                "yahugo",
+                "heɓi",
+                "ɗum",
+                "yahii",
+                "suudu",
+                "waawi",
+                "waɗi",
+                "ndeenee",
+                "yahi",
+                "wondi",
+                "ndiyam",
+            },
+            "EWO_WORD": {
+                "mee",
+                "ndzii",
+                "mia",
+                "ekolo",
+                "abui",
+                "ndap",
+                "nyol",
+                "nkukuma",
+                "yaoundé",
             },
         }
 
@@ -141,27 +328,25 @@ class Lexer:
             sentence.lower()
             .replace("’", "'")
             .replace("+", " ")
-            .replace(",", " and ")
-            .replace("?", " and ")
-            .replace("!", " and ")
-            .replace(";", " and ")
+            .replace(",", " ")
+            .replace("?", " ")
+            .replace("!", " ")
+            .replace(";", " ")
             .replace(".", " ")
         )
 
-        words = re.findall(r"[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?|\d+[a-z]*", cleaned)
-        tokens: List[Token] = []
+        # Unicode-friendly tokenization: supports accents and many African-language letters.
+        word = r"[^\W\d_]+(?:-[^\W\d_]+)*(?:'[^\W\d_]+)?"
+        numword = r"\d+[^\W_]*"
+        words = re.findall(fr"{word}|{numword}", cleaned, flags=re.UNICODE)
 
-        for word in words:
-            token_type = self._classify(word)
-            tokens.append((token_type, word))
-
+        tokens: List[Token] = [(self._classify(w), w) for w in words]
         tokens = self._collapse_conjunctions(tokens)
-
         tokens.append(("$", "$"))
         return tokens
 
     def _classify(self, word: str) -> str:
-        if re.fullmatch(r"\d+[a-z]*", word):
+        if re.fullmatch(r"\d+[^\W_]*", word, flags=re.UNICODE):
             return "NUM"
 
         for token_type, vocab in self.lexicon.items():
@@ -306,7 +491,7 @@ class LL1Parser:
 
 def build_grammar() -> Grammar:
     productions = {
-        "S": [["CLAUSE", "S_TAIL"]],
+        "S": [["CLAUSE", "S_TAIL"], ["GREETING"], ["REQUEST"], ["LANG_SENT"]],
         "S_TAIL": [["CONJ", "CLAUSE", "S_TAIL"], ["ε"]],
         "CLAUSE": [["CORE"]],
         "CORE": [["NP", "CORE_TAIL"], ["VP"], ["ADV"]],
@@ -325,6 +510,13 @@ def build_grammar() -> Grammar:
         "PP": [["PREP", "NP"]],
         "ADV": [["ADVWORD", "ADV_TAIL"]],
         "ADV_TAIL": [["ADVWORD", "ADV_TAIL"], ["ε"]],
+        "GREETING": [["GREET", "GREET_TAIL"]],
+        "GREET_TAIL": [["GREET", "GREET_TAIL"], ["ε"]],
+        "REQUEST": [["REQ_WORD", "REQUEST_BODY"]],
+        "REQUEST_BODY": [["CORE"], ["LANG_SENT"], ["GREETING"], ["ε"]],
+        "LANG_SENT": [["FUL_WORD", "FUL_TAIL"], ["EWO_WORD", "EWO_TAIL"]],
+        "FUL_TAIL": [["FUL_WORD", "FUL_TAIL"], ["ε"]],
+        "EWO_TAIL": [["EWO_WORD", "EWO_TAIL"], ["ε"]],
     }
     return Grammar(start="S", productions=productions)
 
