@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 from dataclasses import dataclass
-from typing import Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 Token = Tuple[str, str]  # (type, lexeme)
@@ -18,12 +19,71 @@ class Grammar:
 class Lexer:
     def __init__(self) -> None:
         self.lexicon = {
-            "CONJ": {"but", "and", "mais"},
-            "DET": {"the", "your", "my", "this", "that", "un", "une", "ce", "cette"},
-            "PRON": {"i", "you", "we", "me", "he", "she", "they", "your", "je", "c'est"},
-            "NEG": {"no", "not"},
-            "AUX": {"don"},
+            "CONJ": {
+                "and",
+                "but",
+                "or",
+                "so",
+                "mais",
+                "et",
+                "donc",
+                "alors",
+                "puis",
+                "parce",
+            },
+            "DET": {
+                "the",
+                "an",
+                "your",
+                "my",
+                "this",
+                "that",
+                "un",
+                "une",
+                "le",
+                "la",
+                "les",
+                "des",
+                "du",
+                "ce",
+                "cette",
+                "ces",
+                "mon",
+                "ma",
+                "mes",
+                "ton",
+                "ta",
+                "tes",
+                "notre",
+                "votre",
+            },
+            "PRON": {
+                "i",
+                "you",
+                "we",
+                "me",
+                "he",
+                "she",
+                "they",
+                "je",
+                "tu",
+                "il",
+                "elle",
+                "on",
+                "nous",
+                "moi",
+                "toi",
+                "lui",
+                "leur",
+                "ça",
+                "c'est",
+                "j'ai",
+                "j'suis",
+            },
+            "NEG": {"no", "not", "pas", "jamais", "plus"},
+            "AUX": {"don", "ai", "as", "a", "avons", "avez", "ont", "est", "suis", "is"},
             "VERB": {
+                # English / Pidgin
                 "drop",
                 "send",
                 "dey",
@@ -51,37 +111,141 @@ class Lexer:
                 "finish",
                 "beat",
                 "spoil",
-                "suis",
-                "fais",
-                "est",
                 "na",
+                "sabi",
+                "want",
+                "need",
+                "wait",
+                "hurry",
+                "pay",
+                "arrived",
+                "flooded",
+                "lost",
+                "cut",
+                "been",
+                "will",
+                "has",
+                # French (common in franc-anglais)
+                "suis",
+                "est",
+                "faire",
+                "fais",
+                "donner",
+                "donne",
+                "envoyer",
+                "envoie",
+                "aller",
+                "vais",
+                "venir",
+                "viens",
+                "peux",
+                "peut",
+                "faut",
+                "chercher",
+                "cherche",
+                "regarder",
+                "regarde",
+                "aider",
+                "aide",
+                "descendre",
+                "descends",
+                "monter",
+                "monte",
+                "pose",
+                "payer",
+                "réduisez",
+                "reduisez",
+                "perdu",
+                "inondé",
+                "inonde",
+                "coupée",
+                "coupee",
+                "été",
+                "ete",
+                "gardez",
+                "arrivé",
+                "arrive",
             },
-            "PREP": {"for", "to", "since", "like"},
+            "PREP": {
+                "for",
+                "to",
+                "since",
+                "like",
+                "in",
+                "on",
+                "at",
+                "from",
+                "dans",
+                "sur",
+                "chez",
+                "avec",
+                "sans",
+                "pour",
+                "depuis",
+                "vers",
+                "derrière",
+                "derriere",
+                "behind",
+                "à",
+                "au",
+                "aux",
+                "de",
+                "du",
+                "des",
+                "en",
+            },
             "ADVWORD": {
                 "small",
+                "ce",
+                "today",
                 "quick",
                 "today",
                 "again",
                 "last-last",
                 "too",
                 "much",
-                "ready",
-                "combien",
-                "scarce",
-                "long",
-                "hmmm",
-                "garrr",
                 "ekiee",
                 "ah",
                 "wanda",
                 "wah",
                 "non",
+                "eh",
+                "abeg",
+                "oya",
+                "svp",
+                "stp",
+                "vite",
+                "maintenant",
+                "déjà",
+                "encore",
+                "aujourd'hui",
+                "tres",
+                "très",
+                "fort",
+                "late",
+                "now",
+                "seulement",
+                "trop",
+                "urgent",
+                "calm",
+            },
+            "ADJ": {
+                "heavy",
+                "down",
+                "long",
+                "dense",
+                "longue",
+                "late",
             },
             "NOUN": {
                 "chef",
+                "chauffeur",
                 "moto-guy",
+                "bendskin",
                 "nlongkak",
                 "carrefour",
+                "ngousso",
+                "melen",
                 "data",
                 "network",
                 "assignment",
@@ -105,6 +269,7 @@ class Lexer:
                 "front",
                 "rain",
                 "road",
+                "route",
                 "problem",
                 "river",
                 "hostel",
@@ -113,12 +278,29 @@ class Lexer:
                 "water",
                 "yaounde",
                 "fuel",
+                "essence",
                 "queue",
                 "station",
                 "taxi",
                 "man",
                 "fare",
                 "aunty",
+                "traffic",
+                "trafic",
+                "network",
+                "panne",
+                "retard",
+                "file",
+                "professeur",
+                "campus",
+                "prix",
+                "pluie",
+                "route",
+                "électricité",
+                "electricite",
+                "réseau",
+                "reseau",
+                "matin",
                 "beignet",
                 "beans",
                 "piment",
@@ -133,6 +315,59 @@ class Lexer:
                 "time",
                 "effort",
                 "enerve",
+                "ictu",
+                "moodle",
+                "devoir",
+                "monnaie",
+                "change",
+                "prière",
+                "couvre-feu",
+            },
+            "GREET": {
+                "mbolo",
+                "molo",
+                "jaaraama",
+                "jam",
+                "tan",
+            },
+            "REQ_WORD": {
+                "please",
+                "svp",
+                "stp",
+                "s'il",
+                "sil",
+                "plait",
+                "plaît",
+            },
+            "REQ_PRON": {
+                "vous",
+            },
+            "FUL_WORD": {
+                "mi",
+                "miɗo",
+                "yidi",
+                "yahugo",
+                "heɓi",
+                "ɗum",
+                "yahii",
+                "suudu",
+                "waawi",
+                "waɗi",
+                "ndeenee",
+                "yahi",
+                "wondi",
+                "ndiyam",
+            },
+            "EWO_WORD": {
+                "mee",
+                "ndzii",
+                "mia",
+                "ekolo",
+                "abui",
+                "ndap",
+                "nyol",
+                "nkukuma",
+                "yaoundé",
             },
         }
 
@@ -141,27 +376,25 @@ class Lexer:
             sentence.lower()
             .replace("’", "'")
             .replace("+", " ")
-            .replace(",", " and ")
-            .replace("?", " and ")
-            .replace("!", " and ")
-            .replace(";", " and ")
+            .replace(",", " ")
+            .replace("?", " ")
+            .replace("!", " ")
+            .replace(";", " ")
             .replace(".", " ")
         )
 
-        words = re.findall(r"[a-z]+(?:-[a-z]+)?(?:'[a-z]+)?|\d+[a-z]*", cleaned)
-        tokens: List[Token] = []
+        # Unicode-friendly tokenization: supports accents and many African-language letters.
+        word = r"[^\W\d_]+(?:-[^\W\d_]+)*(?:'[^\W\d_]+)?"
+        numword = r"\d+[^\W_]*"
+        words = re.findall(fr"{word}|{numword}", cleaned, flags=re.UNICODE)
 
-        for word in words:
-            token_type = self._classify(word)
-            tokens.append((token_type, word))
-
+        tokens: List[Token] = [(self._classify(w), w) for w in words]
         tokens = self._collapse_conjunctions(tokens)
-
         tokens.append(("$", "$"))
         return tokens
 
     def _classify(self, word: str) -> str:
-        if re.fullmatch(r"\d+[a-z]*", word):
+        if re.fullmatch(r"\d+[^\W_]*", word, flags=re.UNICODE):
             return "NUM"
 
         for token_type, vocab in self.lexicon.items():
@@ -193,31 +426,92 @@ class LL1Parser:
         self.table = self._build_parse_table()
 
     def parse(self, tokens: List[Token]) -> bool:
+        return self.parse_with_diagnostics(tokens)["ok"]
+
+    def parse_with_diagnostics(self, tokens: List[Token]) -> Dict[str, Any]:
         stack: List[str] = ["$", self.grammar.start]
         index = 0
+        actions: List[str] = []
+        stack_trace: List[List[str]] = []
+
+        def snapshot(action: str) -> None:
+            actions.append(action)
+            stack_trace.append(list(stack))
+
+        snapshot("init stack")
 
         while stack:
             top = stack.pop()
             current_type = tokens[index][0]
 
             if top == "$":
-                return current_type == "$"
+                ok = current_type == "$"
+                if ok:
+                    snapshot("accept")
+                    return {
+                        "ok": True,
+                        "diagnostic": None,
+                        "actions": actions,
+                        "stack": stack_trace,
+                    }
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": ["$"],
+                    },
+                    "actions": actions,
+                    "stack": stack_trace,
+                }
 
             if self._is_terminal(top):
                 if top == current_type:
                     index += 1
+                    snapshot(f"match {top}")
                     continue
-                return False
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": [top],
+                    },
+                    "actions": actions,
+                    "stack": stack_trace,
+                }
 
             production = self.table.get((top, current_type))
             if production is None:
-                return False
+                expected = sorted({t for (nt, t) in self.table if nt == top})
+                return {
+                    "ok": False,
+                    "diagnostic": {
+                        "position": index,
+                        "actual": current_type,
+                        "expected": expected,
+                    },
+                    "actions": actions,
+                    "stack": stack_trace,
+                }
 
+            snapshot(f"expand {top} -> {' '.join(production)}")
             for symbol in reversed(production):
                 if symbol != "ε":
                     stack.append(symbol)
 
-        return False
+            snapshot("push symbols")
+
+        return {
+            "ok": False,
+            "diagnostic": {
+                "position": index,
+                "actual": tokens[index][0] if index < len(tokens) else "EOF",
+                "expected": ["$"],
+            },
+            "actions": actions,
+            "stack": stack_trace,
+        }
 
     def _is_terminal(self, symbol: str) -> bool:
         return symbol not in self.grammar.productions
@@ -306,25 +600,46 @@ class LL1Parser:
 
 def build_grammar() -> Grammar:
     productions = {
-        "S": [["CLAUSE", "S_TAIL"]],
+        "S": [["CLAUSE", "S_TAIL"], ["GREETING"], ["REQUEST"], ["LANG_SENT"]],
         "S_TAIL": [["CONJ", "CLAUSE", "S_TAIL"], ["ε"]],
         "CLAUSE": [["CORE"]],
         "CORE": [["NP", "CORE_TAIL"], ["VP"], ["ADV"]],
-        "CORE_TAIL": [["VP"], ["ADV", "CORE_TAIL"], ["PP", "CORE_TAIL"], ["ε"]],
+        "CORE_TAIL": [["VP"], ["ADV", "CORE_TAIL"], ["PP", "CORE_TAIL"], ["ADJ", "CORE_TAIL"], ["ε"]],
         "NP": [["DET", "NP_HEAD"], ["NEG", "NP_HEAD"], ["NP_HEAD"]],
         "NP_HEAD": [["NOUN", "NP_TAIL"], ["PRON"], ["NUM"]],
         "NP_TAIL": [["NOUN", "NP_TAIL"], ["ε"]],
-        "VP": [["NEG", "VERB", "VP_TAIL"], ["AUX", "VERB", "VP_TAIL"], ["VERB", "VP_TAIL"]],
+        "VP": [
+            ["NEG", "VERB", "VP_TAIL"],
+            ["AUX", "VP_AUX"],
+            ["VERB", "VP_TAIL"],
+        ],
+        "VP_AUX": [["ADV", "VP_AUX"], ["VERB", "VP_TAIL"], ["ADJ", "VP_TAIL"], ["PP", "VP_TAIL"]],
         "VP_TAIL": [
             ["VERB", "VP_TAIL"],
             ["NP", "VP_TAIL"],
             ["PP", "VP_TAIL"],
             ["ADV", "VP_TAIL"],
+            ["ADJ", "VP_TAIL"],
             ["ε"],
         ],
         "PP": [["PREP", "NP"]],
         "ADV": [["ADVWORD", "ADV_TAIL"]],
         "ADV_TAIL": [["ADVWORD", "ADV_TAIL"], ["ε"]],
+        "GREETING": [["GREET", "GREET_TAIL"]],
+        "GREET_TAIL": [
+            ["GREET", "GREET_TAIL"],
+            ["NOUN", "GREET_TAIL"],
+            ["EWO_WORD", "GREET_TAIL"],
+            ["ε"],
+        ],
+        "REQUEST": [["REQ_PHRASE", "REQUEST_BODY"]],
+        "REQUEST_BODY": [["CORE"], ["LANG_SENT"], ["GREETING"], ["ε"]],
+        "REQ_PHRASE": [["REQ_WORD", "REQ_PHRASE_TAIL"]],
+        "REQ_PHRASE_TAIL": [["REQ_PRON", "REQ_WORD"], ["REQ_WORD"], ["ε"]],
+        "LANG_SENT": [["FUL_WORD", "FUL_TAIL"], ["EWO_WORD", "EWO_TAIL"]],
+        "FUL_TAIL": [["FUL_WORD", "FUL_TAIL"], ["PLACE", "FUL_TAIL"], ["ε"]],
+        "EWO_TAIL": [["EWO_WORD", "EWO_TAIL"], ["PLACE", "EWO_TAIL"], ["ε"]],
+        "PLACE": [["NOUN"]],
     }
     return Grammar(start="S", productions=productions)
 
@@ -338,6 +653,21 @@ def analyze_sentences(sentences: List[str]) -> None:
         ok = parser.parse(tokens)
         verdict = "ACCEPT" if ok else "REJECT"
         print(f"{verdict}: {sentence.strip()}")
+
+
+def parse_sentence(sentence: str, *, explain: bool = False) -> Dict[str, Any]:
+    lexer = Lexer()
+    parser = LL1Parser(build_grammar())
+    tokens = lexer.tokenize(sentence)
+    result = parser.parse_with_diagnostics(tokens)
+    if not explain:
+        result = {
+            "ok": result["ok"],
+            "diagnostic": None,
+            "actions": result.get("actions", []),
+            "stack": result.get("stack", []),
+        }
+    return result
 
 
 def write_token_frequencies(sentences: List[str]) -> None:
@@ -394,6 +724,19 @@ def main() -> None:
     analyze_sentences(sentences)
     write_token_frequencies(sentences)
     write_ll1_artifacts(LL1Parser(build_grammar()))
+
+    if sys.stdin.isatty():
+        print("\nInteractive mode: type a sentence and press Enter (blank or 'exit' to quit).")
+        try:
+            while True:
+                line = input("> ").strip()
+                if not line or line.lower() in {"exit", "quit"}:
+                    break
+                result = parse_sentence(line)
+                verdict = "ACCEPT" if result["ok"] else "REJECT"
+                print(f"{verdict}: {line}")
+        except (EOFError, KeyboardInterrupt):
+            print("\nbye")
 
 
 if __name__ == "__main__":
