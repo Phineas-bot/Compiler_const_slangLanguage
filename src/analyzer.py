@@ -431,6 +431,14 @@ class LL1Parser:
     def parse_with_diagnostics(self, tokens: List[Token]) -> Dict[str, Any]:
         stack: List[str] = ["$", self.grammar.start]
         index = 0
+        actions: List[str] = []
+        stack_trace: List[List[str]] = []
+
+        def snapshot(action: str) -> None:
+            actions.append(action)
+            stack_trace.append(list(stack))
+
+        snapshot("init stack")
 
         while stack:
             top = stack.pop()
@@ -439,7 +447,13 @@ class LL1Parser:
             if top == "$":
                 ok = current_type == "$"
                 if ok:
-                    return {"ok": True, "diagnostic": None}
+                    snapshot("accept")
+                    return {
+                        "ok": True,
+                        "diagnostic": None,
+                        "actions": actions,
+                        "stack": stack_trace,
+                    }
                 return {
                     "ok": False,
                     "diagnostic": {
@@ -447,11 +461,14 @@ class LL1Parser:
                         "actual": current_type,
                         "expected": ["$"],
                     },
+                    "actions": actions,
+                    "stack": stack_trace,
                 }
 
             if self._is_terminal(top):
                 if top == current_type:
                     index += 1
+                    snapshot(f"match {top}")
                     continue
                 return {
                     "ok": False,
@@ -460,6 +477,8 @@ class LL1Parser:
                         "actual": current_type,
                         "expected": [top],
                     },
+                    "actions": actions,
+                    "stack": stack_trace,
                 }
 
             production = self.table.get((top, current_type))
@@ -472,11 +491,16 @@ class LL1Parser:
                         "actual": current_type,
                         "expected": expected,
                     },
+                    "actions": actions,
+                    "stack": stack_trace,
                 }
 
+            snapshot(f"expand {top} -> {' '.join(production)}")
             for symbol in reversed(production):
                 if symbol != "ε":
                     stack.append(symbol)
+
+            snapshot("push symbols")
 
         return {
             "ok": False,
@@ -485,6 +509,8 @@ class LL1Parser:
                 "actual": tokens[index][0] if index < len(tokens) else "EOF",
                 "expected": ["$"],
             },
+            "actions": actions,
+            "stack": stack_trace,
         }
 
     def _is_terminal(self, symbol: str) -> bool:
@@ -635,7 +661,12 @@ def parse_sentence(sentence: str, *, explain: bool = False) -> Dict[str, Any]:
     tokens = lexer.tokenize(sentence)
     result = parser.parse_with_diagnostics(tokens)
     if not explain:
-        result = {"ok": result["ok"], "diagnostic": None}
+        result = {
+            "ok": result["ok"],
+            "diagnostic": None,
+            "actions": result.get("actions", []),
+            "stack": result.get("stack", []),
+        }
     return result
 
 

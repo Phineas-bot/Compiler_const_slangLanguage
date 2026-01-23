@@ -30,6 +30,8 @@ class CheckResponse(BaseModel):
     ok: bool
     diagnostic: Optional[Dict[str, Any]] = None
     tokens: Optional[List[List[str]]] = None
+    actions: Optional[List[str]] = None
+    stack: Optional[List[List[str]]] = None
 
 
 @app.get("/api/health")
@@ -43,6 +45,8 @@ def check(req: CheckRequest) -> CheckResponse:
     response: Dict[str, Any] = {
         "ok": result["ok"],
         "diagnostic": result.get("diagnostic"),
+        "actions": result.get("actions"),
+        "stack": result.get("stack"),
     }
 
     if req.tokens:
